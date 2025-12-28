@@ -1,11 +1,6 @@
-// gateway/server.js
 const express = require("express");
-const cors = require("cors");
 
 const app = express();
-app.use(cors());
-app.use(express.json());
-
 const PORT = process.env.PORT || 3000;
 
 const PDF_WORKER_URL = process.env.PDF_WORKER_URL; 
@@ -25,12 +20,13 @@ app.get("/export/pdf", async (req, res) => {
       .json({ error: "Missing env vars (PDF_WORKER_URL/PDF_WORKER_API_KEY)" });
   }
 
-  if (!reportId) return res.status(400).json({ error: "reportId is required" });
+  if (!reportId) {
+    return res.status(400).json({ error: "reportId is required" });
+  }
 
-  const url =
-    `${PDF_WORKER_URL}/api/pdf` +
-    `?template=${encodeURIComponent(template)}` +
-    `&reportId=${encodeURIComponent(reportId)}`;
+  const url = `${PDF_WORKER_URL}/api/pdf?template=${encodeURIComponent(
+    template
+  )}&reportId=${encodeURIComponent(reportId)}`;
 
   try {
     const r = await fetch(url, {
@@ -42,7 +38,6 @@ app.get("/export/pdf", async (req, res) => {
       return res.status(r.status).send(text);
     }
 
-    // nech sa PDF otvorí v prehliadači (s lištou na download)
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
@@ -50,9 +45,9 @@ app.get("/export/pdf", async (req, res) => {
     );
 
     const buf = Buffer.from(await r.arrayBuffer());
-    return res.send(buf);
+    res.send(buf);
   } catch (e) {
-    return res.status(500).json({ error: "Gateway failed", message: e.message });
+    res.status(500).json({ error: "Gateway failed", message: e.message });
   }
 });
 
